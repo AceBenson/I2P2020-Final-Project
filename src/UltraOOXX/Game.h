@@ -11,6 +11,10 @@
 #include <future>
 #include <type_traits>
 
+// using std functions
+using std::cout;
+using std::endl;
+
 namespace TA
 {
     class UltraOOXX
@@ -25,6 +29,7 @@ namespace TA
             MainBoard()
         {
             gui = new ASCII;
+            MainBoard = UltraBoard();
         }
 
         void setPlayer1(AIInterface *ptr) { assert(checkAI(ptr)); m_P1 = ptr; }
@@ -40,15 +45,28 @@ namespace TA
             putToGui("Hello world %d\n", 123);
             updateGuiGame();
 
-            while (!checkGameover()) {          
+            AIInterface *first = m_P2;
+            AIInterface *second = m_P1;
+            BoardInterface::Tag tag = BoardInterface::Tag::X;
+
+            // while (!checkGameover()) {
+            while (round != 81) {
                 round++;
-                AIInterface *first = nullptr;
-                AIInterface *second = nullptr;
-                BoardInterface::Tag tag = BoardInterface::Tag::O;
+
+                if(tag == BoardInterface::Tag::X) {
+                    tag = BoardInterface::Tag::O;
+                    first = m_P1;
+                    second = m_P2;
+                } else {
+                    tag = BoardInterface::Tag::X;
+                    first = m_P2;
+                    second = m_P1;
+                }
 
                 if (!playOneRound(first, tag, second)) {
                     
                 }
+                // putToGui("round =  %d\n", round);
                 updateGuiGame();
             } 
         } 
@@ -62,12 +80,27 @@ namespace TA
         bool playOneRound(AIInterface *user, BoardInterface::Tag tag, AIInterface *enemy)
         {
             auto pos = call(&AIInterface::queryWhereToPut, user, MainBoard);
+            // cout << pos.first << " " << pos.second << endl; // 1, 2
+            int x = pos.first;
+            int y = pos.second;
+            
+            BoardInterface::Tag& t = MainBoard.get(x, y);
+            if (t != BoardInterface::Tag::None) {
+                // this player will lose
+                return false;
+            }
+
+            t = tag;
+            // enemy->callbackReportEnemy(x, y);
+            call(&AIInterface::callbackReportEnemy, enemy, x, y);
+            
             return true;
         }
 
         bool checkGameover()
         {
-            return true; // Gameover!
+            // return true; // Gameover!
+            return false;
         }
 
         bool prepareState()
@@ -84,8 +117,8 @@ namespace TA
         void call(Func func, AIInterface *ptr, Args... args)
         {
             std::future_status status;
-            auto val = std::async(std::launch::async, func, ptr, args...);
-            status = val.wait_for(std::chrono::milliseconds(m_runtime_limit));
+            auto val = std::async(std::launch::async, func, ptr, args...); //val datatype maybe std::future<std::pair<int, int>>, 就是把function return的值包進去std::future
+            status = val.wait_for(std::chrono::milliseconds(m_runtime_limit)); // 等待m_runtime_limit後，判斷status：deferred、ready、timeout
 
             if( status != std::future_status::ready )
             {
@@ -97,7 +130,7 @@ namespace TA
         template<typename Func ,typename... Args, 
             std::enable_if_t< std::is_void<
                     std::invoke_result_t<Func, AIInterface, Args...>
-                >::value == false, int> = 0 >
+                >::value == false, int> = 0 > //invoke_result_t如果不是void(value == false)，則是這個function，return type由auto以及實際invoke_result_t決定
         auto call(Func func, AIInterface *ptr, Args... args)
             -> std::invoke_result_t<Func, AIInterface, Args...>
         {

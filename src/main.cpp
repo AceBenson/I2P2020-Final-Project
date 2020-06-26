@@ -10,7 +10,7 @@
 
 bool load(const char *libpath, Content &table)
 {
-    table.handle = dlopen(libpath, RTLD_LAZY);
+    table.handle = dlopen(libpath, RTLD_LAZY); //把shared lib打開
 
     if( !table.handle ) {
         std::cout << ".so open:" << dlerror() << std::endl;
@@ -29,7 +29,7 @@ bool load(const char *libpath, Content &table)
         return func_ptr;
     };
 
-    table.getai = reinterpret_cast<decltype(table.getai)>(tryLoad("getai"));
+    table.getai = reinterpret_cast<decltype(table.getai)>(tryLoad("getai")); // tryLoad會回傳Porting.cpp的getai() function，然後把這個getai丟給table.getai
 
     return flag;
 }

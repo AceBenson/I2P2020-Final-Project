@@ -94,9 +94,9 @@ R"( _   _ _ _             _____  _______   ____   __
 
         virtual void appendText(std::string str)
         {
-            m_textbuf = str + m_textbuf;
-            updateTextBuf();
-            showText();
+            // m_textbuf = str + m_textbuf;
+            // updateTextBuf();
+            // showText();
         }
 
         int toPrintChar(BoardInterface::Tag t){
