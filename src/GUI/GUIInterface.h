@@ -35,12 +35,12 @@ namespace TA
 
         void cls()
         {
-            printf( ESC "[H" ESC "[J" );
+            printf( ESC "[H" ESC "[J" ); //清屏並且將游標置頂
         }
 
         void gotoxy(int y, int x)
         {
-            printf( ESC "\033[%d;%df", y, x);
+            printf( ESC "\033[%d;%df", y, x); //移動游標至指定位置
         }
 
         void updateTextBuf()
@@ -82,6 +82,7 @@ namespace TA
         virtual void title() override
         {
             cls();
+            printf( ESC "[1m"); // bold
             puts(
 R"( _   _ _ _             _____  _______   ____   __
 | | | | | |           |  _  ||  _  \ \ / /\ \ / /
@@ -90,19 +91,24 @@ R"( _   _ _ _             _____  _______   ____   __
 | |_| | | |_| | | (_| \ \_/ /\ \_/ / /^\ \/ /^\ \
  \___/|_|\__|_|  \__,_|\___/  \___/\/   \/\/   \/
 )");
+            printf( ESC "[m");
         }
 
         virtual void appendText(std::string str)
         {
-            // m_textbuf = str + m_textbuf;
-            // updateTextBuf();
-            // showText();
+            m_textbuf = str + m_textbuf;
+            updateTextBuf();
+            showText();
         }
 
-        int toPrintChar(BoardInterface::Tag t){
+        int toPrintChar(BoardInterface::Tag t){ //return char by tag
             switch(t) {
-                case BoardInterface::Tag::O: return 'O';
-                case BoardInterface::Tag::X: return 'X';
+                case BoardInterface::Tag::O: 
+                    printf( ESC "[34m" ); // blue
+                    return 'O';
+                case BoardInterface::Tag::X: 
+                    printf( ESC "[31m" ); // red
+                    return 'X';
                 default:
                     return ' ';
             }
@@ -111,7 +117,7 @@ R"( _   _ _ _             _____  _______   ____   __
         virtual void updateGame(UltraBoard b)
         {
             gotoxy(7+1, 0);
-            const std::string buf(20, ' ');
+            const std::string buf(20, ' '); //20 space
 
             for (int i=0;i<9;++i)
             {
@@ -119,11 +125,13 @@ R"( _   _ _ _             _____  _______   ____   __
                 for (int j=0;j<9;++j)
                 {
                     std::putchar(toPrintChar(b.get(i, j)));
+                    printf( ESC "[m" );
                     if (j == 2 || j == 5) std::putchar('|');
                 }
                 std::putchar('\n');
                 if (i==2 ||i==5) {
                     std::printf("%s", buf.c_str());
+                    printf( ESC "[m" );
                     std::puts(std::string(12,'-').c_str());
                 }
             }

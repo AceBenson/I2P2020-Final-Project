@@ -29,13 +29,13 @@ public:
         (void) x;
         (void) y;
         // give last step
-        this->Main_x = x;
-        this->Main_y = y;
+        this->Main_x = x%3;
+        this->Main_y = y%3;
     }
 
     std::pair<int,int> queryWhereToPut(TA::UltraBoard MainBoard) override
     {
-        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+        std::this_thread::sleep_for(std::chrono::milliseconds(200)); //simulate computing time, can't more than 1000
         auto pair = select_random_pair(MainBoard);
         return pair;
     }
@@ -45,7 +45,7 @@ private:
         srand( time(NULL) );
 
         std::set<std::pair<int, int>> candidates;
-        if (Main_x == -1 && Main_y == -1 || MainBoard.sub(Main_x, Main_y).full()) { // no constrain
+        if ( (Main_x == -1 && Main_y == -1) || MainBoard.sub(Main_x, Main_y).full()) { // no constrain
             for (int i=0; i<9; ++i) {
                 for (int j=0; j<9; ++j) {
                     if (MainBoard.get(i, j) == TA::BoardInterface::Tag::None) {
@@ -53,17 +53,14 @@ private:
                     }
                 }
             }
-
             int n = rand() % candidates.size();
             auto it = candidates.begin();
             std::advance(it, n);
             random_pair = *it;
             
         } else {
-            int x = Main_x%3;
-            x *= 3;
-            int y = Main_y%3;
-            y *= 3;
+            int x = Main_x*3;
+            int y = Main_y*3;
             for (int i=x; i<x+3; ++i) {
                 for (int j=y; j<y+3; ++j) {
                     if (MainBoard.get(i, j) == TA::BoardInterface::Tag::None) {
