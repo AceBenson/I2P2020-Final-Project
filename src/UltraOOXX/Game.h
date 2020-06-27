@@ -41,8 +41,7 @@ namespace TA
             int round = 0;
             if( !prepareState() ) return ;
 
-            //Todo: Play Game
-            putToGui("Hello world %d\n", 123);
+            //Todo: Play Game;
             updateGuiGame();
 
             AIInterface *first = m_P2;
@@ -52,8 +51,8 @@ namespace TA
             // while (!checkGameover()) {
             while (round != 81) {
                 round++;
-                // char c;
-                // std::cin >> c;
+                char c;
+                std::cin >> c;
 
                 if(tag == BoardInterface::Tag::X) {
                     tag = BoardInterface::Tag::O;
@@ -83,7 +82,7 @@ namespace TA
         bool playOneRound(AIInterface *user, BoardInterface::Tag tag, AIInterface *enemy)
         {
             auto pos = call(&AIInterface::queryWhereToPut, user, MainBoard);
-            cout << pos.first << " " << pos.second << endl; // 1, 2
+            // cout << pos.first << " " << pos.second << endl; // 1, 2
             int x = pos.first;
             int y = pos.second;
             
