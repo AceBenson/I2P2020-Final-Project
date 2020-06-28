@@ -43,19 +43,19 @@ public:
 
     std::pair<int,int> queryWhereToPut(TA::UltraBoard MainBoard) override
     {
-        // if(!is_Fisrt) {
-        //     std::this_thread::sleep_for(std::chrono::milliseconds(200)); //simulate computing time, can't more than 1000
-        //     auto pair = select_random_pair(MainBoard);
-        //     return pair;
-        // } else { // predefined answer
-        //     std::this_thread::sleep_for(std::chrono::milliseconds(200)); //simulate computing time, can't more than 1000
-        //     auto pair = predefined_pair(MainBoard);
-        //     return pair;
-        // }
+        if(!is_Fisrt) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(10)); //simulate computing time, can't more than 1000
+            auto pair = select_random_pair(MainBoard);
+            return pair;
+        } else { // predefined answer
+            std::this_thread::sleep_for(std::chrono::milliseconds(10)); //simulate computing time, can't more than 1000
+            auto pair = predefined_pair(MainBoard);
+            return pair;
+        }
         // all two is AI
-        std::this_thread::sleep_for(std::chrono::milliseconds(200)); //simulate computing time, can't more than 1000
-        auto pair = select_random_pair(MainBoard);
-        return pair;
+        // std::this_thread::sleep_for(std::chrono::milliseconds(10)); //simulate computing time, can't more than 1000
+        // auto pair = select_random_pair(MainBoard);
+        // return pair;
     }
 private:
     std::pair<int, int> select_random_pair (TA::UltraBoard MainBoard) {

@@ -96,56 +96,43 @@ namespace TA
 
             t = tag;
 
-            updateWinTag(t, x, y);
+            // updateWinTag(t, x, y);
+            JudgeWinState(MainBoard.sub(x/3, y/3));
+            JudgeWinState(MainBoard);
 
             call(&AIInterface::callbackReportEnemy, enemy, x, y);
             return true;
         }
 
-        void updateWinTag(BoardInterface::Tag t, int x, int y) {
-            bool flag = false; 
-            Board save = MainBoard.sub(x/3,y/3);
-            if(MainBoard.sub(x/3,y/3).getWinTag() == BoardInterface::Tag::None){
-                for(int i = 0; i < 3; i++){
-                    if(save.get(i, 0) == t && save.get(i, 1) == t && save.get(i, 2) == t){
-                        MainBoard.sub(x/3,y/3).setWinTag(t);
-                        flag = true;
-                    }
-                }
-                for(int j = 0; j < 3; j++){
-                    if(save.get(0, j) == t && save.get(1, j) == t && save.get(2, j) == t){
-                        MainBoard.sub(x/3,y/3).setWinTag(t);
-                        flag = true;
-                    }
-                }
-                if(save.get(0, 0) == t && save.get(1, 1) == t && save.get(2, 2) == t){
-                    MainBoard.sub(x/3,y/3).setWinTag(t);
-                    flag = true;
-                }
-                if(save.get(2, 0) == t && save.get(1, 1) == t && save.get(0, 2) == t){
-                    MainBoard.sub(x/3,y/3).setWinTag(t);
-                    flag = true;
-                }
-                if(flag){
-                    for(int i = 0 ; i< 3; i++){
-                        if(MainBoard.sub(i,0).getWinTag() == t && MainBoard.sub(i,1).getWinTag() == t && MainBoard.sub(i,2).getWinTag() == t){
-                            MainBoard.setWinTag(t);
-                        }
-                        if(MainBoard.sub(0,i).getWinTag() == t && MainBoard.sub(1,i).getWinTag() == t && MainBoard.sub(2,i).getWinTag() == t){
-                            MainBoard.setWinTag(t);
-                        }
-                    }
-                    if(MainBoard.sub(0,0).getWinTag() == t && MainBoard.sub(1,1).getWinTag() == t && MainBoard.sub(2,2).getWinTag() == t){
-                        MainBoard.setWinTag(t);
-                    }
-                    if(MainBoard.sub(2,0).getWinTag() == t && MainBoard.sub(1,1).getWinTag() == t && MainBoard.sub(0,2).getWinTag() == t){
-                        MainBoard.setWinTag(t);
-                    }
-                }
-                flag = false;
+        BoardInterface::Tag JudgeWinState(BoardInterface& b) { // maybe return type void?
+            if(b.getWinTag() != BoardInterface::Tag::None) {
+                return b.getWinTag();
             }
-            if(MainBoard.sub(x/3,y/3).getWinTag() == BoardInterface::Tag::None && MainBoard.sub(x/3,y/3).full()) 
-                MainBoard.sub(x/3,y/3).setWinTag(BoardInterface::Tag::Tie);
+            for (int i=0; i<3; ++i) { //row
+                if( (b.state(i, 0) == b.state(i, 1)) && (b.state(i, 0) == b.state(i, 2)) && (b.state(i, 0) != BoardInterface::Tag::None) && (b.state(i, 0) != BoardInterface::Tag::Tie) ) {
+                    b.setWinTag(b.state(i, 0));
+                    return b.getWinTag();
+                }
+            }
+            for (int j=0; j<3; ++j) { //column
+                if( (b.state(0, j) == b.state(1, j)) && (b.state(0, j) == b.state(2, j)) && (b.state(0, j) != BoardInterface::Tag::None) && (b.state(0, j) != BoardInterface::Tag::Tie) ) {
+                    b.setWinTag(b.state(0, j));
+                    return b.getWinTag();
+                }
+            }
+            if ( (b.state(0, 0) == b.state(1, 1)) && (b.state(0, 0) == b.state(2, 2)) && (b.state(0, 0) != BoardInterface::Tag::None) && (b.state(0, 0) != BoardInterface::Tag::Tie) ) {
+                b.setWinTag(b.state(0, 0));
+                return b.getWinTag();
+            }
+            if ( (b.state(0, 2) == b.state(1, 1)) && (b.state(0, 2) == b.state(2, 0)) && (b.state(0, 2) != BoardInterface::Tag::None) && (b.state(0, 2) != BoardInterface::Tag::Tie) ) {
+                b.setWinTag(b.state(0, 2));
+                return b.getWinTag();
+            }
+            if (b.full()) {
+                b.setWinTag(BoardInterface::Tag::Tie);
+                return b.getWinTag();
+            }
+            return b.getWinTag();
         }
         
         char toPrintChar(BoardInterface::Tag t){
@@ -159,7 +146,6 @@ namespace TA
 
         bool checkGameover()
         {
-            // return true; // Gameover!
             if(MainBoard.getWinTag() != BoardInterface::Tag::None){
                 if(MainBoard.getWinTag() == BoardInterface::Tag::Tie) {
                     putToGui("Tie!!!\n");
@@ -168,7 +154,6 @@ namespace TA
                 putToGui("The player %c is win!!!\n", toPrintChar(MainBoard.getWinTag()));
                 return true;
             }
-            // std::cout << toPrintChar(MainBoard.getWinTag()) <<"\n";
             return false;
         }
 

@@ -15,6 +15,14 @@ namespace TA {
                     b[i][j].reset();
         }
 
+        bool full() const {
+            for (int i=0;i<3;++i)
+                for (int j=0;j<3;++j)
+                    if (!b[i][j].full())
+                        return false;
+            return true;
+        }
+
         Board::Tag& get(int x, int y) {
             return b[x/3][y/3].get(x%3, y%3);
         }

@@ -11,6 +11,7 @@ namespace TA {
         };
 
         virtual Tag state(int x, int y) const = 0;
+        virtual bool full() const = 0;
 
         Tag getWinTag() const {return wintag;}
         void setWinTag(Tag t) {wintag = t;}
