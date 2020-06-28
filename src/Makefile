@@ -1,5 +1,5 @@
 CXX = g++
-CXXFLAG = -std=c++17 -O2 -Wall -Wextra -fPIC
+CXXFLAG = -std=c++17 -O2 -Wall -Wextra -fPIC -Werror -Wextra -pedantic-errors
 GMAEINCLUDE = ./
 BUILDDIR = ./build
 

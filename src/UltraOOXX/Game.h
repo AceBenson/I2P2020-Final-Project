@@ -161,6 +161,10 @@ namespace TA
         {
             // return true; // Gameover!
             if(MainBoard.getWinTag() != BoardInterface::Tag::None){
+                if(MainBoard.getWinTag() == BoardInterface::Tag::Tie) {
+                    putToGui("Tie!!!\n");
+                    return true;
+                }
                 putToGui("The player %c is win!!!\n", toPrintChar(MainBoard.getWinTag()));
                 return true;
             }

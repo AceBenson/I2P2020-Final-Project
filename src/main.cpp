@@ -53,9 +53,14 @@ int main()
     game.setPlayer1( (AIInterface*) P1.getai() );
     game.setPlayer2( (AIInterface*) P2.getai() );
 
+    int num = system("canebrake-gtk-play -f example.ogg");
+    std::cout << "num = " << num;
+
     game.run();
 
     dlclose(P1.handle);
     dlclose(P2.handle);
+
+    
     return 0;
 }

@@ -128,21 +128,81 @@ R"( _   _ _ _             _____  _______   ____   __
                     printf( ESC "[m" );
                     if (j == 2 || j == 5) std::putchar('|');
                 }
+                // add my board
+                std::printf("%s", buf.c_str());
+                for (int j=0;j<9;++j)
+                {
+                    switch(toPrintChar(b.sub(i/3, j/3).getWinTag())) {
+                        case 'O':
+                            if (i%3 == 0 || i%3 == 2) {
+                                if (j%3 == 1) {
+                                    std::putchar('O');
+                                } else {
+                                    std::putchar(' ');
+                                }
+                            } else { // i%3 == 1
+                                if (j%3 == 0 || j%3 == 2) {
+                                    std::putchar('O');
+                                } else {
+                                    std::putchar(' ');
+                                }
+                            }
+                            // if(i%3 == 1 && j%3 == 1) {
+                            //     std::putchar(' ');
+                            // } else {
+                            //     std::putchar('O');
+                            // }
+                            break;
+                        case 'X':
+                            if ((i%3 == 0 || i%3 == 2) && (j%3 == 0 || j%3 == 2)) {
+                                std::putchar('X');
+                            } else if (i%3 == 1 && j%3 == 1) {
+                                std::putchar('X');
+                            } else {
+                                std::putchar(' ');
+                            }
+                            break;
+                        case ' ':
+                            if (b.sub(i/3, j/3).getWinTag() == TA::BoardInterface::Tag::Tie) {
+                                std::putchar('T');
+                            } else {
+                                std::putchar(' ');
+                            }
+                            break;
+                    }
+                    printf( ESC "[m" );
+                    if (j == 2 || j == 5) std::putchar('|');
+                }
+
                 std::putchar('\n');
                 if (i==2 ||i==5) {
                     std::printf("%s", buf.c_str());
                     printf( ESC "[m" );
-                    std::puts(std::string(12,'-').c_str());
+                    // std::puts(std::string(12,'-').c_str());
+                    printf("%s", std::string(11,'-').c_str());
+
+                    // add my board
+                    std::printf("%s", buf.c_str());
+                    std::puts(std::string(11,'-').c_str());
                 }
             }
-
             gotoxy(GRAPH_HIGHT+TEXT_HIGHT+1, 0);
         }
 
-        virtual void updateWinTagGame(UltraBoard b)
-        {
-            
-        }
+        // char outputCharPattern(BoardInterface::Tag t) {
+        //     switch(t) {
+        //         case BoardInterface::Tag::O: 
+        //             // printf( ESC "[1;34m" ); // blue text
+        //             // printf( ESC "[1;44m" ); // blue background
+        //             return 'O';
+        //         case BoardInterface::Tag::X: 
+        //             // printf( ESC "[1;31m" ); // red text
+        //             // printf( ESC "[1;41m" ); // red background
+        //             return 'X';
+        //         default:
+        //             return ' ';
+        //     }
+        // }
     };
     #undef ESC
 }
