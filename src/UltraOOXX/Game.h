@@ -42,17 +42,18 @@ namespace TA
             if( !prepareState() ) return ;
 
             //Todo: Play Game;
+            MainBoard.setWinTag(BoardInterface::Tag::None);
             updateGuiGame();
 
             AIInterface *first = m_P2;
             AIInterface *second = m_P1;
             BoardInterface::Tag tag = BoardInterface::Tag::X;
 
-            // while (!checkGameover()) {
-            while (round != 81) {
+            while (!checkGameover()) {
+            // while (round != 81) {
                 round++;
-                char c;
-                std::cin >> c;
+                // char c;
+                // std::cin >> c;
 
                 if(tag == BoardInterface::Tag::X) {
                     tag = BoardInterface::Tag::O;
@@ -89,19 +90,81 @@ namespace TA
             BoardInterface::Tag& t = MainBoard.get(x, y);
             if (t != BoardInterface::Tag::None) {
                 // this player will lose
+                std::cout << "Wrong here\n";
                 return false;
             }
 
             t = tag;
-            // enemy->callbackReportEnemy(x, y);
+
+            updateWinTag(t, x, y);
+
             call(&AIInterface::callbackReportEnemy, enemy, x, y);
-            
             return true;
+        }
+
+        void updateWinTag(BoardInterface::Tag t, int x, int y) {
+            bool flag = false; 
+            Board save = MainBoard.sub(x/3,y/3);
+            if(MainBoard.sub(x/3,y/3).getWinTag() == BoardInterface::Tag::None){
+                for(int i = 0; i < 3; i++){
+                    if(save.get(i, 0) == t && save.get(i, 1) == t && save.get(i, 2) == t){
+                        MainBoard.sub(x/3,y/3).setWinTag(t);
+                        flag = true;
+                    }
+                }
+                for(int j = 0; j < 3; j++){
+                    if(save.get(0, j) == t && save.get(1, j) == t && save.get(2, j) == t){
+                        MainBoard.sub(x/3,y/3).setWinTag(t);
+                        flag = true;
+                    }
+                }
+                if(save.get(0, 0) == t && save.get(1, 1) == t && save.get(2, 2) == t){
+                    MainBoard.sub(x/3,y/3).setWinTag(t);
+                    flag = true;
+                }
+                if(save.get(2, 0) == t && save.get(1, 1) == t && save.get(0, 2) == t){
+                    MainBoard.sub(x/3,y/3).setWinTag(t);
+                    flag = true;
+                }
+                if(flag){
+                    for(int i = 0 ; i< 3; i++){
+                        if(MainBoard.sub(i,0).getWinTag() == t && MainBoard.sub(i,1).getWinTag() == t && MainBoard.sub(i,2).getWinTag() == t){
+                            MainBoard.setWinTag(t);
+                        }
+                        if(MainBoard.sub(0,i).getWinTag() == t && MainBoard.sub(1,i).getWinTag() == t && MainBoard.sub(2,i).getWinTag() == t){
+                            MainBoard.setWinTag(t);
+                        }
+                    }
+                    if(MainBoard.sub(0,0).getWinTag() == t && MainBoard.sub(1,1).getWinTag() == t && MainBoard.sub(2,2).getWinTag() == t){
+                        MainBoard.setWinTag(t);
+                    }
+                    if(MainBoard.sub(2,0).getWinTag() == t && MainBoard.sub(1,1).getWinTag() == t && MainBoard.sub(0,2).getWinTag() == t){
+                        MainBoard.setWinTag(t);
+                    }
+                }
+                flag = false;
+            }
+            if(MainBoard.sub(x/3,y/3).getWinTag() == BoardInterface::Tag::None && MainBoard.sub(x/3,y/3).full()) 
+                MainBoard.sub(x/3,y/3).setWinTag(BoardInterface::Tag::Tie);
+        }
+        
+        char toPrintChar(BoardInterface::Tag t){
+            switch(t) {
+                case BoardInterface::Tag::O: return 'O';
+                case BoardInterface::Tag::X: return 'X';
+                default:
+                    return ' ';
+            }
         }
 
         bool checkGameover()
         {
             // return true; // Gameover!
+            if(MainBoard.getWinTag() != BoardInterface::Tag::None){
+                putToGui("The player %c is win!!!\n", toPrintChar(MainBoard.getWinTag()));
+                return true;
+            }
+            // std::cout << toPrintChar(MainBoard.getWinTag()) <<"\n";
             return false;
         }
 

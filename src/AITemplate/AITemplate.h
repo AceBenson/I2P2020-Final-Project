@@ -14,6 +14,7 @@
 #include <thread>
 #include <cstdlib>
 #include <stack>
+#include <queue>
 
 
 class AI : public AIInterface
@@ -23,15 +24,11 @@ public:
 
     void init(bool order) override // prepareState will call this
     {
-        // any way
-        // Main_x = -1;
-        // Main_y = -1;
-        main_pos = std::make_pair(-1, -1);
-        // last_Main_x = -1;
-        // last_Main_y = -1;
-        is_Fisrt = order;
-
         gui = new TA::ASCII;
+
+        main_pos = std::make_pair(-1, -1);
+        is_Fisrt = order;
+        phase = 0;
     }
 
     void callbackReportEnemy(int x, int y) override
@@ -39,12 +36,9 @@ public:
         (void) x;
         (void) y;
         // give last step
+
         main_pos = std::make_pair(x%3, y%3);
-        last_single_main_pos = std::make_pair(x/3, y/3);
-        if(last_main_pos.empty())
-            last_main_pos.push(std::make_pair(x/3, y/3));
-        else if(std::make_pair(x/3, y/3) != last_main_pos.top())
-            last_main_pos.push(std::make_pair(x/3, y/3));
+        last_pos = std::make_pair(x, y);
     }
 
     std::pair<int,int> queryWhereToPut(TA::UltraBoard MainBoard) override
@@ -98,110 +92,66 @@ private:
         return random_pair;
     }
 
+    std::pair<int, int> select_correspond_pair (TA::UltraBoard MainBoard, std::pair<int, int> my_main_pos) {
+        if (MainBoard.get(my_main_pos.first*3 + my_main_pos.first, my_main_pos.second*3 + my_main_pos.second) == TA::BoardInterface::Tag::None)
+            return std::make_pair(my_main_pos.first*3 + my_main_pos.first, my_main_pos.second*3 + my_main_pos.second);
+        else // should not here;
+            return select_random_pair(MainBoard);
+    }
+
     std::pair<int, int> predefined_pair (TA::UltraBoard MainBoard) {
-        std::pair<int, int> my_pair;
-
-        if ( (main_pos.first == -1 && main_pos.second == -1) ) { // first move;
-            my_pair = std::make_pair(4, 4);
-            return my_pair;
-        }
-
-        while(!last_main_pos.empty() && MainBoard.sub(last_main_pos.top().first, last_main_pos.top().second).full()) {
-            std::cout << "POP last_main_pos.top() = " << last_main_pos.top().first << " " << last_main_pos.top().second << "\n";
-            last_main_pos.pop();
-            if(!last_main_pos.empty()) {
-                std::cout << "new last_main_pos.top() = " << last_main_pos.top().first << " " << last_main_pos.top().second << "\n";
+        if (phase == 0) {
+            if ( (main_pos.first == -1 && main_pos.second == -1) ) { // first move;
+                send_back_pos_queue.push(std::make_pair(1, 1));
+                return std::make_pair(4, 4);;
             }
-        }
-        if (MainBoard.sub(main_pos.first, main_pos.second).full()) { // no constrain
-            std::cout << "No constrain\n";
-            if(!last_main_pos.empty()) { // I want to send him back
-                std::cout << "I want to send him back to " << last_main_pos.top().first << " " << last_main_pos.top().second << "\n";
-                my_pair = send_him_back(MainBoard, false, last_main_pos.top());
-            } else {
-                std::cout << "I don't want to send him back\n";
-                // 但是還是要找對面的
-                int diagonalX = 2 - last_single_main_pos.first;
-                int diagonalY = 2 - last_single_main_pos.second;
-                my_pair = select_from_the_same_block(MainBoard, std::make_pair(diagonalX, diagonalY));
-                if(my_pair != std::make_pair(-1, -1)) {
-                    for (int i=0; i<3; ++i) {
-                        for (int j=0; j<3; ++j) {
-                            my_pair = select_from_the_same_block(MainBoard, std::make_pair(i, j));
-                            if(my_pair != std::make_pair(-1, -1)) 
-                                break;
-                        }
-                    }
-                    if (my_pair == std::make_pair(-1, -1)) 
-                        my_pair = select_random_pair(MainBoard);
+            if ( MainBoard.sub(1, 1).full() ) {
+                phase++;
+                std::cout << "phase 0 to phase 1\n";
+                send_back_pos_queue.pop();
+                send_back_pos_queue.push(std::make_pair(main_pos.first, main_pos.second));
+                return select_correspond_pair(MainBoard, main_pos);
+            }
+            return std::make_pair(main_pos.first*3 + 1, main_pos.second*3 + 1); // 1 == send_back_pos_queue.front().first
+        } else if (phase == 1) {
+            std::pair <int, int> special_center = std::make_pair( send_back_pos_queue.front().first*3 + 1, send_back_pos_queue.front().second*3 + 1 );
+            std::pair <int, int> special_diagonal = std::make_pair( send_back_pos_queue.front().first*3 + (2 - send_back_pos_queue.front().first), send_back_pos_queue.front().second*3 + (2 - send_back_pos_queue.front().second) );
+            if (last_pos == special_center || last_pos == special_diagonal) { // the two special case
+                std::pair <int, int> new_main_pos = std::make_pair((2 - send_back_pos_queue.front().first), (2 - send_back_pos_queue.front().second)); // move to diagonal
+                if (MainBoard.get(new_main_pos.first*3 + send_back_pos_queue.front().first, new_main_pos.second*3 + send_back_pos_queue.front().second) == TA::BoardInterface::Tag::None) { // if I can send him back
+                    return std::make_pair(new_main_pos.first*3 + send_back_pos_queue.front().first, new_main_pos.second*3 + send_back_pos_queue.front().second);
                 }
+                // I can't send him back so go to phase 2
+                phase++;
+                send_back_pos_queue.push(std::make_pair(new_main_pos.first, new_main_pos.second));
+                return select_correspond_pair(MainBoard, new_main_pos);
+            } else //send him back
+                return std::make_pair(main_pos.first*3 + send_back_pos_queue.front().first, main_pos.second*3 + send_back_pos_queue.front().second);
+        } else if (phase == 2) { // now send him back to first one board, otherwise the second one
+            if (MainBoard.sub(send_back_pos_queue.front().first, send_back_pos_queue.front().second).full()) {
+                send_back_pos_queue.pop();
             }
-        } else { // constrain to main_pos
-            std::cout << "Constrain to main_pos\n";
-            if(!last_main_pos.empty()) { // I want to send him back
-                std::cout << "I want to send him back to " << last_main_pos.top().first << " " << last_main_pos.top().second << "\n";
-                my_pair = send_him_back(MainBoard, true, last_main_pos.top());
-            } else { // I don't want to send him back, otherwise he can choose wherever he want.
-                std::cout << "I don't want to send him back\n";
-                my_pair = select_from_the_same_block(MainBoard, main_pos);
-                if (my_pair == std::make_pair(-1, -1)) 
-                    my_pair = select_random_pair(MainBoard);
+            
+            if(MainBoard.get(main_pos.first*3 + send_back_pos_queue.front().first, main_pos.second*3 + send_back_pos_queue.front().second) == TA::BoardInterface::Tag::None)
+                return std::make_pair(main_pos.first*3 + send_back_pos_queue.front().first, main_pos.second*3 + send_back_pos_queue.front().second);
+            else if (MainBoard.get(main_pos.first*3 + send_back_pos_queue.back().first, main_pos.second*3 + send_back_pos_queue.back().second) == TA::BoardInterface::Tag::None )
+                return std::make_pair(main_pos.first*3 + send_back_pos_queue.back().first, main_pos.second*3 + send_back_pos_queue.back().second);
+            else { // Now you should already win
+                phase++;
+                return select_random_pair(MainBoard); 
             }
+                // std::cout << "Should not be here.\n";
+        } else if (phase == 3) {
+            return select_random_pair(MainBoard);
         }
 
-        return my_pair;
-    }
-
-    std::pair<int, int> send_him_back(TA::UltraBoard MainBoard, bool isConstrained, std::pair<int, int> goal_main_pos) {
-        int Main_x;
-        int Main_y;
-        if (!isConstrained) {
-            Main_x = 2 - goal_main_pos.first; // diagonal main_x
-            Main_y = 2 - goal_main_pos.second; // diagonal main_y
-        } else {
-            Main_x = main_pos.first;
-            Main_y = main_pos.second;
-        }
-        int tempX = Main_x*3 + goal_main_pos.first; // the position which I can send him back
-        int tempY = Main_y*3 + goal_main_pos.second; // the position which I can send him back
-        if( MainBoard.get(tempX, tempY) ==  TA::BoardInterface::Tag::None) { // I can send him back;
-            return std::make_pair(tempX, tempY);
-        } else { // I can't send him back
-            if (!isConstrained) {
-                for (int i=0; i<3; ++i) {
-                    for (int j=0; j<3; ++j) {
-                        tempX = i*3 + goal_main_pos.first; // the position which I can send him back
-                        tempY = j*3 + goal_main_pos.second; // the position which I can send him back
-                        if( MainBoard.get(tempX, tempY) ==  TA::BoardInterface::Tag::None) { // I can send him back;
-                            return std::make_pair(tempX, tempY);
-                        }
-                    }
-                }
-            }
-            int newX = tempX + (Main_x*3+1 - tempX)*2; // diagonal tempX
-            int newY = tempY + (Main_y*3+1 - tempY)*2; // diagonal tempY
-            if( MainBoard.get(newX, newY) == TA::BoardInterface::Tag::None) {
-                return std::make_pair(newX, newY);
-            } else {
-                return select_random_pair(MainBoard);
-            }
-        }
-    }
-
-    std::pair<int, int> select_from_the_same_block(TA::UltraBoard MainBoard, std::pair<int, int> goal_main_pos) {
-        int tempX = goal_main_pos.first*3 + goal_main_pos.first;
-        int tempY = goal_main_pos.second*3 + goal_main_pos.second;
-        if( MainBoard.get(tempX, tempY) == TA::BoardInterface::Tag::None ) {
-            return std::make_pair(tempX, tempY);
-        } else {
-            // return select_random_pair(MainBoard);
-            return std::make_pair(-1, -1);
-        }
+        return select_random_pair(MainBoard);
     }
 
     std::pair<int, int> main_pos;
-    std::stack<std::pair<int, int>> last_main_pos;
-    std::pair<int, int> last_single_main_pos;
+    std::pair<int, int> last_pos;
+    std::queue<std::pair<int, int>> send_back_pos_queue;
+    int phase;
     bool is_Fisrt;
 
     TA::GUIInterface *gui;

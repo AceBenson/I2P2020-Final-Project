@@ -96,9 +96,9 @@ R"( _   _ _ _             _____  _______   ____   __
 
         virtual void appendText(std::string str)
         {
-            // m_textbuf = str + m_textbuf;
-            // updateTextBuf();
-            // showText();
+            m_textbuf = str + m_textbuf;
+            updateTextBuf();
+            showText();
         }
 
         int toPrintChar(BoardInterface::Tag t){ //return char by tag
@@ -137,6 +137,11 @@ R"( _   _ _ _             _____  _______   ____   __
             }
 
             gotoxy(GRAPH_HIGHT+TEXT_HIGHT+1, 0);
+        }
+
+        virtual void updateWinTagGame(UltraBoard b)
+        {
+            
         }
     };
     #undef ESC
