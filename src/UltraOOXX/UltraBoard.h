@@ -6,6 +6,7 @@ namespace TA {
     class UltraBoard : public BoardInterface {
     public:
         UltraBoard() {
+            setWinTag(BoardInterface::Tag::None);
             reset();
         }
 
