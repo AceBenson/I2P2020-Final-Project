@@ -45,19 +45,148 @@ public:
     {
         if(!is_Fisrt) {
             std::this_thread::sleep_for(std::chrono::milliseconds(10)); //simulate computing time, can't more than 1000
-            auto pair = select_random_pair(MainBoard);
+            auto pair = backhand(MainBoard);
+            // auto pair = select_random_pair(MainBoard);
             return pair;
         } else { // predefined answer
             std::this_thread::sleep_for(std::chrono::milliseconds(10)); //simulate computing time, can't more than 1000
             auto pair = predefined_pair(MainBoard);
+            // auto pair = select_random_pair(MainBoard);
             return pair;
         }
-        // all two is AI
-        // std::this_thread::sleep_for(std::chrono::milliseconds(10)); //simulate computing time, can't more than 1000
-        // auto pair = select_random_pair(MainBoard);
-        // return pair;
     }
 private:
+    typedef struct _point{          // for backhand
+        int points;
+        std::pair<int, int> pair;
+    } point;
+
+    int get_points(TA::UltraBoard MainBoard, int i, int j,int p,int level){
+        int cnt = 0;
+        int max = -100;
+        int min = 100;
+        int ii = i%3;
+        int jj = j%3;
+        //bool flag = false;
+        if(level == 3) return 0;
+        if(level%2==0){
+            TA::BoardInterface::Tag t_enemy = MainBoard.get(last_pos.first, last_pos.second);
+            TA::BoardInterface::Tag &t = MainBoard.get(i,j);
+            if(t_enemy == TA::BoardInterface::Tag::O) t = TA::BoardInterface::Tag::X;
+            else t = TA::BoardInterface::Tag::O;
+            TA::Board save = MainBoard.sub(main_pos.first, main_pos.second);
+            if(save.getWinTag() == TA::BoardInterface::Tag::None){
+                for(int k = 0; k < 3; k++){
+                    if(save.get(k, 0) == t && save.get(k, 1) == t && save.get(k, 2) == t)p += 5;//flag = true;
+                    if(save.get(0, k) == t && save.get(1, k) == t && save.get(2, k) == t)p += 5;//flag = true;
+                }
+                if(save.get(0, 0) == t && save.get(1, 1) == t && save.get(2, 2) == t)p += 5;//flag = true;
+                if(save.get(2, 0) == t && save.get(1, 1) == t && save.get(0, 2) == t)p += 5;//flag = true;
+                t = t_enemy;
+                for(int k = 0; k < 3; k++){
+                    if(save.get(k, 0) == t && save.get(k, 1) == t && save.get(k, 2) == t)p += 2;//flag = true;
+                    if(save.get(0, k) == t && save.get(1, k) == t && save.get(2, k) == t)p += 2;//flag = true;
+                }
+                if(save.get(0, 0) == t && save.get(1, 1) == t && save.get(2, 2) == t)p += 2;//flag = true;
+                if(save.get(2, 0) == t && save.get(1, 1) == t && save.get(0, 2) == t)p += 2;//flag = true;
+                if(ii == main_pos.first && jj == main_pos.second) p += 3;
+                if(i%3 == 1 && j%3 == 1)p -= 5;
+                else if (i%3 == 1 || j%3 == 1)p += 1;
+            }
+            else{
+                // have win tag
+            }
+            for(int _i = ii ; _i < ii + 3; _i++){
+                for(int _j = jj;_j < jj + 3; _j++){
+                    if (MainBoard.get(_i, _j) == TA::BoardInterface::Tag::None){
+                        cnt = get_points(MainBoard,_i,_j,p,level+1);
+                        if(cnt > max)   max = cnt;
+                        t = TA::BoardInterface::Tag::None;
+                    }
+                }
+            }
+            if(max != -100) return p + max;
+            return p;
+        }
+        else{
+            TA::BoardInterface::Tag t1 = MainBoard.get(last_pos.first, last_pos.second);
+            TA::BoardInterface::Tag &t_enemy1 = MainBoard.get(i,j);
+            if(t1 == TA::BoardInterface::Tag::O) t_enemy1 = TA::BoardInterface::Tag::X;
+            else t_enemy1 = TA::BoardInterface::Tag::O;
+            TA::Board save = MainBoard.sub(main_pos.first, main_pos.second);
+            //TA::Board next = MainBoard.sub(i%3,j%3);
+            if(save.getWinTag() == TA::BoardInterface::Tag::None){
+                for(int k = 0; k < 3; k++){
+                    if(save.get(k, 0) == t_enemy1 && save.get(k, 1) == t_enemy1 && save.get(k, 2) == t_enemy1)p -= 5;//flag = true;
+                    if(save.get(0, k) == t_enemy1 && save.get(1, k) == t_enemy1 && save.get(2, k) == t_enemy1)p -= 5;//flag = true;
+                }
+                if(save.get(0, 0) == t_enemy1 && save.get(1, 1) == t_enemy1 && save.get(2, 2) == t_enemy1)p -= 5;//flag = true;
+                if(save.get(2, 0) == t_enemy1 && save.get(1, 1) == t_enemy1 && save.get(0, 2) == t_enemy1)p -= 5;//flag = true;
+                t_enemy1 = t1;
+                for(int k = 0; k < 3; k++){
+                    if(save.get(k, 0) == t_enemy1 && save.get(k, 1) == t_enemy1 && save.get(k, 2) == t_enemy1)p -= 2;//flag = true;
+                    if(save.get(0, k) == t_enemy1 && save.get(1, k) == t_enemy1 && save.get(2, k) == t_enemy1)p -= 2;//flag = true;
+                }
+                if(save.get(0, 0) == t_enemy1 && save.get(1, 1) == t_enemy1 && save.get(2, 2) == t_enemy1)p -= 2;//flag = true;
+                if(save.get(2, 0) == t_enemy1 && save.get(1, 1) == t_enemy1 && save.get(0, 2) == t_enemy1)p -= 2;//flag = true;
+                if(i%3 == 1 && j%3 == 1) p += 1;
+                //else if ((i%3 == 2 && j%3 == 1) || (i%3 == 0 && j%3 == 1)) p -= 2;
+                else if (i%3 == 1 || j%3 == 1)p -= 1;
+            }
+            else{
+                // have win tag
+            }
+            for(int _i = ii ; _i < ii + 3; _i++){
+                for(int _j = jj;_j < jj + 3; _j++){
+                    if (MainBoard.get(_i, _j) == TA::BoardInterface::Tag::None){
+                        cnt = get_points(MainBoard,_i,_j,p,level+1);
+                        if(cnt < min)   min = cnt;
+                        t_enemy1 = TA::BoardInterface::Tag::None;
+                    }
+                }
+            }
+            if(min != 100) return p + min;
+            return p;
+        }
+    }
+    std::pair<int, int> backhand (TA::UltraBoard MainBoard) {
+        std::pair<int, int> b_pair;
+
+        std::set<std::pair<int, int>> candidates;
+        if ( (main_pos.first == -1 && main_pos.second == -1) || MainBoard.sub(main_pos.first, main_pos.second).full()) { // no constrain
+            return select_random_pair(MainBoard);
+            // check next step
+        }else {
+            std::vector<point> candidate;
+            int x = main_pos.first*3;
+            int y = main_pos.second*3;
+            
+            for (int i=x; i<x+3; ++i) {
+                for (int j=y; j<y+3; ++j) {
+                    if (MainBoard.get(i, j) == TA::BoardInterface::Tag::None) {
+                        point tmp;
+                        tmp.pair = std::make_pair(i, j);
+                        tmp.points = get_points(MainBoard, i, j, 0, 0);
+                        candidate.push_back(tmp);
+                    }
+                }
+            }
+            int max = -50;
+            int n = candidate.size();
+            auto it = candidate.begin();
+            auto iter = candidate.begin();
+            for(int i = 0; i < n; i++){
+                if(it->points > max){
+                    iter = it;
+                    max = it->points;
+                }
+                it++;
+            }
+            candidate.clear();
+            return iter->pair;
+        }
+    }
+
     std::pair<int, int> select_random_pair (TA::UltraBoard MainBoard) {
         std::pair<int, int> random_pair;
         srand( time(NULL) );
